@@ -1,0 +1,102 @@
+@import url("https://fonts.googleapis.com/css2?family=Comic+Neue:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&display=swap");
+
+:root {
+	--accent-color: #ff9f11;
+	--button-font: "Roboto", sans-serif;
+	--body-font: "Poppins", sans-serif;
+	--main-background-color: #fcfcff;
+}
+
+body {
+	margin: 0;
+	padding: 0;
+	background-color: var(--main-background-color);
+	height: 100vh;
+	overflow: hidden;
+}
+
+#title {
+	font-family: "Comic Neue", cursive, sans-serif;
+	font-size: 2.5em;
+	text-align: center;
+	color: var(--accent-color);
+	font-weight: bold;
+}
+
+#mainMenu {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	height: 100vh;
+	overflow: scroll;
+	gap: 2em;
+	font-size: 1.5em;
+	position: relative;
+}
+
+#mainMenu input {
+	font-family: var(--body-font);
+	font-size: 1em;
+	padding: 0.5em 1em;
+	border-radius: 0.5em;
+	border: 1px solid var(--accent-color);
+}
+
+.button {
+	cursor: pointer;
+	font-family: var(--button-font);
+	display: inline-block;
+	aspect-ratio: 5/1;
+	font-size: 1em;
+	text-align: center;
+	padding: 0.5em 1.5em;
+	border-radius: 1em;
+	background-color: var(--accent-color);
+	color: var(--main-background-color);
+	font-weight: bold;
+}
+
+.button:after {
+	content: attr("after");
+}
+
+#startingGoose {
+	position: fixed;
+	transform-origin: 50% 50%;
+	width: 100vw;
+	opacity: 0;
+	pointer-events: none;
+}
+
+#mainMenu.closed #startingGoose {
+	animation: gooseIntro 1s ease-in-out;
+	animation-fill-mode: forwards;
+}
+
+#mainMenu.closed > *:not(#startingGoose) {
+	opacity: 0;
+	pointer-events: none;
+}
+
+@keyframes gooseIntro {
+	from {
+		scale: 0;
+		opacity: 1;
+	}
+
+	50% {
+		scale: 1.5;
+		opacity: 1;
+	}
+	to {
+		scale: 1;
+		opacity: 0;
+	}
+}
+
+#game {
+	position: fixed;
+	top: 0;
+	left: 0;
+}
