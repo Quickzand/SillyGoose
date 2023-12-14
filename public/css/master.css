@@ -173,7 +173,7 @@ body {
 	justify-content: center;
 	align-items: center;
 	opacity: 1;
-	pointer-events: none;
+	cursor: pointer;
 	backdrop-filter: blur(10px);
 	-webkit-backdrop-filter: blur(10px);
 }

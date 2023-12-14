@@ -5,7 +5,10 @@ const path = require("path");
 const app = express();
 expressWs(app);
 
-const walls = [{ x: -200, y: 0, width: 10, height: 500 }];
+const walls = [
+	{ x: -200, y: 0, width: 10, height: 500 },
+	{ x: 200, y: 0, width: 10, height: 500 },
+];
 
 let interactions = [];
 
@@ -135,6 +138,16 @@ app.ws("/ws", (ws, req) => {
 						playerId: message.playerId,
 						itemId: message.itemId,
 					});
+					break;
+				case "updateSelectedItemSlot":
+					gameManager.broadcastToAllExcept(
+						{
+							type: "updateSelectedItemSlot",
+							slotNum: message.slotNum,
+							id: message.id,
+						},
+						player
+					);
 					break;
 				default:
 					console.error("Unknown message type:", message.type);

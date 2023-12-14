@@ -24,12 +24,22 @@ socket.onmessage = function (event) {
 			var players = JSON.parse(message.players);
 			gameManager.updatePlayers(players);
 			break;
+		case "playerInteraction":
+			gameManager.playerInteraction(message.playerId, message.itemId);
+			break;
 		case "updateInteractions":
 			var interactions = JSON.parse(message.interactions);
 			// gameManager.updateInteractions(interactions);
 			break;
 		case "movePlayer":
 			gameManager.movePlayer(message.x, message.y, message.id);
+			break;
+		case "updateSelectedItemSlot":
+			gameManager.updateSelectedItemSlot(
+				message.slotNum,
+				gameManager.getPlayerById(message.id)
+			);
+			console.log(message);
 			break;
 		case "loadMap":
 			var walls = JSON.parse(message.walls);

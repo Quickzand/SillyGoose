@@ -88,6 +88,25 @@ class Goose extends Entity {
 			this.GOOSE_SIZE
 		);
 
+		// Draw the selected item
+		if (this.inventory.length > 0) {
+			var selectedItem = this.inventory[this.selectedItemSlot];
+			if (selectedItem && selectedItem.sprite) {
+				ctx.translate(
+					selectedItem.playerDisplayTranslation.x,
+					selectedItem.playerDisplayTranslation.y
+				);
+				ctx.rotate((selectedItem.playerDisplayRotation * Math.PI) / 180);
+				ctx.drawImage(
+					selectedItem.sprite,
+					-this.GOOSE_SIZE / 4,
+					-this.GOOSE_SIZE / 4,
+					this.GOOSE_SIZE / 2,
+					this.GOOSE_SIZE / 2
+				);
+			}
+		}
+
 		// Reset rotation and move back to original position
 		ctx.restore();
 
@@ -96,6 +115,12 @@ class Goose extends Entity {
 		ctx.textAlign = "center";
 		ctx.fillStyle = "black";
 		ctx.fillText(this.name + " | " + this.id, this.x, this.y + 50);
+	}
+
+	runActionOnSelectedItem() {
+		if (this.inventory.length > 0) {
+			this.inventory[this.selectedItemSlot].itemAction(this);
+		}
 	}
 
 	collidesWithWall(futureX, futureY) {
@@ -194,6 +219,71 @@ class Goose extends Entity {
 	}
 }
 
+class Bullet extends Entity {
+	constructor(options) {
+		super(options);
+		this.speed = options.speed ?? 5;
+		this.travelled = 200;
+		this.travelled = 0;
+	}
+
+	update() {
+		var adjustedRotation = this.rotation - Math.PI / 2;
+
+		// Calculate the directional components of the bullet's velocity
+		var dx = Math.cos(adjustedRotation) * this.speed;
+		var dy = Math.sin(adjustedRotation) * this.speed;
+		// Move the bullet
+		this.x += dx;
+		this.y += dy;
+		this.travelled += this.speed;
+
+		// Check for collision with walls
+		gameManager.Walls.forEach((wall) => {
+			if (this.collidesWithWall(wall)) {
+				// Calculate the reflection
+				this.bounceOffWall(wall);
+			}
+		});
+
+		// Check if the bullet has travelled its full range
+		if (this.travelled >= this.range) {
+			this.delete = true;
+		}
+	}
+
+	draw() {
+		ctx.fillStyle = "black";
+		ctx.fillRect(this.x, this.y, 10, 10);
+	}
+
+	// Add collision logic here
+	collidesWith(other) {
+		// Simple collision logic, can be expanded
+		return (
+			Math.abs(this.x - other.x) < other.width &&
+			Math.abs(this.y - other.y) < other.height
+		);
+	}
+
+	collidesWithWall(wall) {
+		// Check if the bullet is within the bounds of the wall
+		// Assuming the bullet is represented as a point for simplicity
+		const withinXBounds = this.x >= wall.x && this.x <= wall.x + wall.width;
+		const withinYBounds = this.y >= wall.y && this.y <= wall.y + wall.height;
+
+		return withinXBounds && withinYBounds;
+	}
+	bounceOffWall(wall) {
+		// Assume walls are either vertical or horizontal for simplicity
+		if (wall.isVertical) {
+			this.rotation = Math.PI - this.rotation; // Reflect horizontally
+		} else {
+			this.rotation = -this.rotation; // Reflect vertically
+		}
+	}
+}
+
 class Item extends Entity {
 	constructor(options) {
 		options.handleCollision = false;
@@ -205,6 +295,8 @@ class Item extends Entity {
 		this.sprite = document.getElementById(options.spriteID);
 		this.id = options.id ?? Math.floor(Math.random() * 1000000);
 		this.name = options.name ?? "Item";
+		this.playerDisplayRotation = 0;
+		this.playerDisplayTranslation = { x: 0, y: 0 };
 	}
 
 	draw() {
@@ -217,6 +309,8 @@ class Item extends Entity {
 		if (player) player.inventory.push(this);
 		this.delete = true;
 	}
+
+	itemAction() {}
 }
 
 class Glock extends Item {
@@ -228,6 +322,19 @@ class Glock extends Item {
 		super(options);
 
 		this.actionButtonText = "Shoot";
+		this.playerDisplayRotation = 270;
+		this.playerDisplayTranslation = { x: 25, y: 0 };
+	}
+
+	itemAction(player) {
+		// Create a bullet at the player's position with the player's rotation
+		var bullet = new Bullet({
+			x: player.x,
+			y: player.y,
+			rotation: player.rotation,
+		});
+
+		gameManager.Entities.push(bullet);
 	}
 }
 class Ring extends Entity {
@@ -302,6 +409,18 @@ class GameManager {
 			entity.update(timestamp);
 			if (entity.delete) {
 				this.Entities.splice(this.Entities.indexOf(entity), 1);
+			}
+		});
+
+		this.Entities.forEach((entity) => {
+			if (entity instanceof Bullet) {
+				this.Entities.forEach((other) => {
+					if (other !== entity && entity.collidesWith(other)) {
+						// Handle collision
+						console.log("Bullet collided with something", other, entity);
+						// Additional logic for what happens on collision
+					}
+				});
 			}
 		});
 	}
@@ -464,10 +583,27 @@ class GameManager {
 		}
 	}
 
-	updateSelectedItemSlot(slotNum) {
-		this.activePlayer.selectedItemSlot = slotNum;
-		$(".inventorySlot").removeClass("selected");
-		$(".inventorySlot").eq(slotNum).addClass("selected");
+	updateSelectedItemSlot(slotNum, player) {
+		if (!player) return;
+		player.selectedItemSlot = slotNum;
+		if (player == this.activePlayer) {
+			$(".inventorySlot").removeClass("selected");
+			$(".inventorySlot").eq(slotNum).addClass("selected");
+		} else {
+			console.log(slotNum, player.inventory);
+		}
+	}
+
+	playerInteraction(playerId, itemId) {
+		var player = this.players.find((player) => player.id == playerId);
+		var item = this.Entities.find((entity) => entity.id == itemId);
+		if (player && item) {
+			item.interact(player);
+		}
+	}
+
+	getPlayerById(id) {
+		return this.players.find((player) => player.id == id);
 	}
 }
 
@@ -478,7 +614,14 @@ gameManager.updateSelectedItemSlot(0);
 $(".inventorySlot").on("click", function (event) {
 	var slotNum = $(this).index();
 	console.log(slotNum);
-	gameManager.updateSelectedItemSlot(slotNum);
+	gameManager.updateSelectedItemSlot(slotNum, gameManager.activePlayer);
+	socket.send(
+		JSON.stringify({
+			type: "updateSelectedItemSlot",
+			slotNum: slotNum,
+			id: playerID,
+		})
+	);
 });
 // Handle tap events
 canvas.on("click", function (event) {
@@ -497,4 +640,8 @@ canvas.on("click", function (event) {
 
 		gameManager.moveActivePlayer(gameX, gameY);
 	}
+});
+
+$("#actionButton").on("click", () => {
+	gameManager.activePlayer.runActionOnSelectedItem();
 });
