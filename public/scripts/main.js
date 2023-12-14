@@ -1,19 +1,42 @@
-var localPlayerState = {
-	name: "",
-	id: "",
-};
+var socket = new WebSocket("ws://mattbookpro.local:3000/ws");
+var playerName = "Player 1";
 
-var socket = new WebSocket("ws://localhost:3000/ws");
-
+const playerID = Math.floor(Math.random() * 1000000);
 function joinGame() {
-	localPlayerState.name = $("#nameInput").val();
-	// Generate a random ID for the player
-	localPlayerState.id = Math.floor(Math.random() * 1000000000);
-	// Send the player state to the server\
-	socket.send(JSON.stringify(localPlayerState));
+	playerName = $("#nameInput").val();
+	// Send the player state to the server
+	socket.send(
+		JSON.stringify({
+			type: "joinGame",
+			name: playerName,
+			id: playerID,
+		})
+	);
 
 	$("#mainMenu").addClass("closed");
+	$("#game").removeClass("closed");
 }
+
+socket.onmessage = function (event) {
+	var message = JSON.parse(event.data);
+	switch (message.type) {
+		case "updatePlayers":
+			var players = JSON.parse(message.players);
+			gameManager.updatePlayers(players);
+			break;
+		case "updateInteractions":
+			var interactions = JSON.parse(message.interactions);
+			// gameManager.updateInteractions(interactions);
+			break;
+		case "movePlayer":
+			gameManager.movePlayer(message.x, message.y, message.id);
+			break;
+		case "loadMap":
+			var walls = JSON.parse(message.walls);
+			gameManager.loadMap(walls);
+			break;
+	}
+};
 
 // wait 1 sec
 // send a message to the server

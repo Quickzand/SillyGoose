@@ -8,16 +8,44 @@
 		<script src="scripts/main.js" async defer></script>
 		<script src="scripts/gameController.js" async defer></script>
 		<title>Test</title>
+
+		<img src="images/playerGoose.png" id="playerGooseSprite" class="sprite" />
+		<img src="images/tempWorld.png" id="worldMapSprite" class="sprite" />
+		<img src="images/glockSprite.png" id="glockSprite" class="sprite" />
 	</head>
 
 	<body>
 		<div id="mainMenu">
 			<img src="images/gooseWink.png" alt="Goose" id="startingGoose" />
 			<div id="title">Silly Goose 🦢</div>
-			<input type="text" placeholder="Name" id="nameInput" />
+			<input type="text" placeholder="Name" id="nameInput" value="Matthew" />
 			<div class="button" onclick="joinGame()">Join</div>
 		</div>
-		<canvas id="game"></canvas>
+		<div id="gameContainer">
+			<canvas id="game" class="closed"></canvas>
+			<div id="gameUI">
+				<div id="actionButton"></div>
+				<div id="inventory">
+					<div class="inventorySlot" data-slot="0">
+						<img src="" alt="" />
+						<span></span>
+					</div>
+					<div class="inventorySlot" data-slot="1">
+						<img src="" alt="" />
+						<span></span>
+					</div>
+					<div class="inventorySlot" data-slot="2">
+						<img src="" alt="" />
+						<span></span>
+					</div>
+					<div class="inventorySlot" data-slot="3">
+						<img src="" alt="" />
+						<span></span>
+					</div>
+				</div>
+			</div>
+		</div>
+
 		<script>
 			document.write(
 				'<script src="http://' +
